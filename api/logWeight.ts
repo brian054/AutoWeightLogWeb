@@ -8,8 +8,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  console.log("Webhook URL prefix:", process.env.APPS_SCRIPT_WEBHOOK_URL?.slice(0, 80)); // test
-
   try {
     const { loggedAt, weight, bodyFat, muscleMass, notes } = req.body;
 

@@ -1,10 +1,26 @@
+This project allows me to take a picture of my scale readings and auto import them into a Google Sheet. This removes
+the friction from having to manually log and record my scale readings every single day (pounds, muscle %, fat %, etc.).
+Now I can simply
+
+1. Wake up
+2. Open website on bookmarked icon on phone (eventually an app icon...)
+3. take picture of scale reading
+4. review numbers, modify if needed, normally won't have to
+5. Submit and Sheets API writes data to your google sheet.
+
+WishList:
+
+- Integrate this into LiftLog application.
+
 # React + TypeScript + Vite
 
 TODO:
 
-- First: Connect this to your Google Sheets file so you can log the entries, log an entry in Prod, then do the stuff below.
 - Modify frontend to show muscle and fat indicator for percentage so you dont get confused on which is which
 - Remove the water percentage idc about that. Also move the X button, in the wrong spot.
+- SPIKE: Is there an alternative, better than OpenAI API? Any free solutions? OpenAI is great just a little slow with the response.
+- Branch off, do a GCP instead of Apps Script. Then you can turn this into an app people can use.
+  - goal: login via email? can log in app or just in your own excel sheet or wherever.
 
 `npx vercel dev` to run local
 
