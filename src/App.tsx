@@ -55,7 +55,6 @@ export default function App() {
     setFile(null);
     setPreview("");
     setError("");
-    setSuccess("");
     setDebugInfo(null);
     setIsReading(false);
     setIsSaving(false);
@@ -137,13 +136,35 @@ export default function App() {
     setError("");
     setSuccess("");
 
-    console.log("Saved:", form);
+    try {
+      const res = await fetch("/api/logWeight", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          loggedAt: form.loggedAt,
+          weight: form.weight,
+          bodyFat: form.bodyFat,
+          muscleMass: form.muscleMass,
+          notes: form.notes,
+        }),
+      });
 
-    setTimeout(() => {
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || "Failed to save");
+      }
+
       setSuccess("Saved!");
       clearCurrentEntry();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to save");
+    } finally {
       setIsSaving(false);
-    }, 500);
+    }
   }
 
   const hasData =

@@ -2,6 +2,7 @@
 
 TODO:
 
+- First: Connect this to your Google Sheets file so you can log the entries, log an entry in Prod, then do the stuff below.
 - Modify frontend to show muscle and fat indicator for percentage so you dont get confused on which is which
 - Remove the water percentage idc about that. Also move the X button, in the wrong spot.
 
