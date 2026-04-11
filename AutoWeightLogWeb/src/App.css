@@ -1,0 +1,158 @@
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #000;
+  color: #fff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: #000;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: #1f1f1f;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.title {
+  margin: 0 0 8px;
+  text-align: center;
+  color: #fff;
+}
+
+.subtitle {
+  margin: 0 0 20px;
+  text-align: center;
+  color: #ddd;
+}
+
+.label {
+  display: block;
+  margin: 14px 0 8px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+}
+
+.file-input,
+.input,
+.textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: block;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #444;
+  background: #000;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.file-input {
+  overflow: hidden;
+}
+
+.file-input::file-selector-button {
+  margin-right: 12px;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #3a3a3a;
+  color: #fff;
+  cursor: pointer;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.preview {
+  margin-top: 16px;
+}
+
+.preview img {
+  width: 100%;
+  display: block;
+  border-radius: 12px;
+}
+
+.button {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 16px;
+  font-size: 1rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.button-primary {
+  background: #2f67e8;
+}
+
+.button-success {
+  background: #19a948;
+}
+
+.confirm-header {
+  position: relative;
+  margin-top: 18px;
+}
+
+.divider {
+  border-top: 1px solid #333;
+  margin: 20px 0 16px;
+}
+
+.close-button {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #444;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.error {
+  color: #ff6b6b;
+  margin-top: 14px;
+}
+
+.success {
+  color: #3ddc84;
+  margin-top: 14px;
+  text-align: center;
+}
