@@ -1,5 +1,10 @@
 # React + TypeScript + Vite
 
+TODO:
+
+- Modify frontend to show muscle and fat indicator for percentage so you dont get confused on which is which
+- Remove the water percentage idc about that. Also move the X button, in the wrong spot.
+
 `npx vercel dev` to run local
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

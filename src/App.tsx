@@ -10,6 +10,8 @@ type FormState = {
   loggedAt: string;
 };
 
+const SHOW_DEBUG = false;
+
 const emptyForm = (): FormState => ({
   weight: "",
   bodyFat: "",
@@ -26,6 +28,7 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   const [form, setForm] = useState<FormState>(emptyForm());
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -34,6 +37,7 @@ export default function App() {
     setFile(f);
     setError("");
     setSuccess("");
+    setDebugInfo(null);
 
     if (!f) {
       setPreview("");
@@ -51,6 +55,8 @@ export default function App() {
     setFile(null);
     setPreview("");
     setError("");
+    setSuccess("");
+    setDebugInfo(null);
     setIsReading(false);
     setIsSaving(false);
     setForm(emptyForm());
@@ -58,6 +64,7 @@ export default function App() {
     const fileInput = document.getElementById(
       "file-input",
     ) as HTMLInputElement | null;
+
     if (fileInput) {
       fileInput.value = "";
     }
@@ -72,6 +79,7 @@ export default function App() {
     setIsReading(true);
     setError("");
     setSuccess("");
+    setDebugInfo(null);
 
     try {
       const base64 = await fileToBase64(file);
@@ -88,6 +96,9 @@ export default function App() {
       });
 
       const result = await res.json();
+
+      console.log("DEBUG FROM API:", result.debug);
+      setDebugInfo(result.debug ?? null);
 
       if (!res.ok) {
         console.error("Backend error:", result);
@@ -245,12 +256,15 @@ export default function App() {
 
         {error && <p className="error">{error}</p>}
         {success && <p className="success">{success}</p>}
+
+        {SHOW_DEBUG && debugInfo && (
+          <pre className="debug-box">{JSON.stringify(debugInfo, null, 2)}</pre>
+        )}
       </div>
     </div>
   );
 }
 
-// Helpers, move out if needed
 function getNow() {
   const now = new Date();
   const offset = now.getTimezoneOffset() * 60000;

@@ -15,6 +15,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  const key = process.env.OPENAI_API_KEY;
+
+  const debug = {
+    hasKey: !!key,
+    keyPrefix: key ? key.slice(0, 7) : null,
+  };
+
+  console.log("DEBUG:", debug);
+
   try {
     const { imageBase64, mimeType } = req.body;
 
@@ -22,6 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({
         success: false,
         error: "Missing OPENAI_API_KEY",
+        debug,
       });
     }
 
@@ -29,6 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({
         success: false,
         error: "Missing imageBase64 or mimeType",
+        debug,
       });
     }
 
@@ -59,7 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   "- waterPercent: the bottom-left percent next to the wave icon",
                   "- muscleMass: the bottom-center number next to the flexed arm icon",
                   "Ignore bone mass and any other values.",
-                  "If a value is not clearly visible, return null."
+                  "If a value is not clearly visible, return null.",
                 ].join("\n"),
               },
               {
@@ -80,18 +91,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               type: "object",
               additionalProperties: false,
               properties: {
-                weight: {
-                  type: ["number", "null"],
-                },
-                bodyFat: {
-                  type: ["number", "null"],
-                },
-                muscleMass: {
-                  type: ["number", "null"],
-                },
-                waterPercent: {
-                  type: ["number", "null"],
-                },
+                weight: { type: ["number", "null"] },
+                bodyFat: { type: ["number", "null"] },
+                muscleMass: { type: ["number", "null"] },
+                waterPercent: { type: ["number", "null"] },
               },
               required: ["weight", "bodyFat", "muscleMass", "waterPercent"],
             },
@@ -108,6 +111,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(openAiResponse.status).json({
         success: false,
         error: data?.error?.message || "OpenAI request failed",
+        debug,
+        rawError: data,
       });
     }
 
@@ -119,6 +124,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({
         success: false,
         error: "No content returned from OpenAI",
+        debug,
       });
     }
 
@@ -134,12 +140,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         success: false,
         error: "Failed to parse structured response",
         raw: content,
+        debug,
       });
     }
 
     return res.status(200).json({
       success: true,
       data: parsed,
+      debug,
     });
   } catch (error) {
     console.error("Extract error:", error);
@@ -147,6 +155,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({
       success: false,
       error: "Extraction failed",
+      debug,
     });
   }
 }
