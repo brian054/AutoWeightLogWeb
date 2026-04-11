@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 type FormState = {
@@ -30,6 +30,17 @@ export default function App() {
   const [success, setSuccess] = useState("");
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [form, setForm] = useState<FormState>(emptyForm());
+
+  // Not really necessary for this, but just in case....free the old image if a new one is taken/selected.
+  // prev behavior: if you 'use photo' but then upload a new one....you're stacking them on top of each other.
+  // This should never be an issue but I wanna leave it here just in case.
+  useEffect(() => {
+    if (!preview) return;
+
+    return () => {
+      URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null;
