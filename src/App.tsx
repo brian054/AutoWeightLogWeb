@@ -89,7 +89,12 @@ export default function App() {
 
       const result = await res.json();
 
-      if (!res.ok || !result.success) {
+      if (!res.ok) {
+        console.error("Backend error:", result);
+        throw new Error(result.error || "Backend request failed");
+      }
+
+      if (!result.success) {
         throw new Error(result.error || "Failed to read image");
       }
 
@@ -104,6 +109,7 @@ export default function App() {
         notes: "auto-read",
       }));
     } catch (err: any) {
+      console.error(err);
       setError(err.message || "Something went wrong");
     } finally {
       setIsReading(false);

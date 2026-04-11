@@ -1,18 +1,38 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+type ExtractedScaleData = {
+  weight: number | null;
+  bodyFat: number | null;
+  muscleMass: number | null;
+  waterPercent: number | null;
+};
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
-    return res.status(405).json({ success: false, error: "Method not allowed" });
+    return res.status(405).json({
+      success: false,
+      error: "Method not allowed",
+    });
   }
 
   try {
     const { imageBase64, mimeType } = req.body;
 
-    if (!imageBase64) {
-      return res.status(400).json({ success: false, error: "No image provided" });
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        error: "Missing OPENAI_API_KEY",
+      });
     }
 
-    const response = await fetch("https://api.openai.com/v1/responses", {
+    if (!imageBase64 || !mimeType) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing imageBase64 or mimeType",
+      });
+    }
+
+    const openAiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -20,55 +40,100 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       body: JSON.stringify({
         model: "gpt-4.1-mini",
-        input: [
+        messages: [
+          {
+            role: "developer",
+            content:
+              "You extract body scale readings from images. Return only the requested JSON.",
+          },
           {
             role: "user",
             content: [
               {
-                type: "input_text",
-                text: `
-Read this scale image and extract:
-- weight
-- bodyFat
-- muscleMass
-- waterPercent
-
-Return ONLY JSON like:
-{
-  "weight": number | null,
-  "bodyFat": number | null,
-  "muscleMass": number | null,
-  "waterPercent": number | null
-}
-
-If a value is not visible, return null.
-`,
+                type: "text",
+                text: [
+                  "Read this body scale image.",
+                  "Return these values:",
+                  "- weight: the large top-left number in pounds",
+                  "- bodyFat: the top-right percent",
+                  "- waterPercent: the bottom-left percent next to the wave icon",
+                  "- muscleMass: the bottom-center number next to the flexed arm icon",
+                  "Ignore bone mass and any other values.",
+                  "If a value is not clearly visible, return null."
+                ].join("\n"),
               },
               {
-                type: "input_image",
-                image_url: `data:${mimeType};base64,${imageBase64}`,
+                type: "image_url",
+                image_url: {
+                  url: `data:${mimeType};base64,${imageBase64}`,
+                },
               },
             ],
           },
         ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "scale_reading",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                weight: {
+                  type: ["number", "null"],
+                },
+                bodyFat: {
+                  type: ["number", "null"],
+                },
+                muscleMass: {
+                  type: ["number", "null"],
+                },
+                waterPercent: {
+                  type: ["number", "null"],
+                },
+              },
+              required: ["weight", "bodyFat", "muscleMass", "waterPercent"],
+            },
+          },
+        },
       }),
     });
 
-    const data = await response.json();
+    const data = await openAiResponse.json();
 
-    const text = data.output?.[0]?.content?.[0]?.text;
+    if (!openAiResponse.ok) {
+      console.error("OpenAI API error:", data);
 
-    console.log("OpenAI raw response:", text);
+      return res.status(openAiResponse.status).json({
+        success: false,
+        error: data?.error?.message || "OpenAI request failed",
+      });
+    }
 
-    let parsed;
+    const content = data?.choices?.[0]?.message?.content;
 
-    try {
-      parsed = JSON.parse(text);
-    } catch {
+    console.log("OpenAI structured response content:", content);
+
+    if (!content) {
       return res.status(500).json({
         success: false,
-        error: "Failed to parse AI response",
-        raw: text,
+        error: "No content returned from OpenAI",
+      });
+    }
+
+    let parsed: ExtractedScaleData;
+
+    try {
+      parsed = JSON.parse(content) as ExtractedScaleData;
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      console.error("Raw content:", content);
+
+      return res.status(500).json({
+        success: false,
+        error: "Failed to parse structured response",
+        raw: content,
       });
     }
 
