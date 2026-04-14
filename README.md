@@ -8,8 +8,12 @@ Now I can simply
 4. review numbers, modify if needed, normally won't have to
 5. Submit and Sheets API writes data to your google sheet.
 
-WishList:
+TODO:
 
+- Add a pin-code on Vercel DashB before you do 'npx vercel env pull'
+- Use the pin code successfully so no random people run up your GPT API credits.
+- Fix/Probe those errors happening locally, some generic local errors. Don't seem to be happening in prod.
+- Do a code audit and clean stuff up!
 - Integrate this into LiftLog application.
 
 # React + TypeScript + Vite

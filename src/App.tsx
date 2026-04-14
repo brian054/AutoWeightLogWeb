@@ -31,6 +31,12 @@ export default function App() {
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [form, setForm] = useState<FormState>(emptyForm());
 
+  // auth stuff
+  const [pin, setPin] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState<boolean | null>(null);
+  const [pinError, setPinError] = useState("");
+  const [isUnlocking, setIsUnlocking] = useState(false);
+
   // Not really necessary for this, but just in case....free the old image if a new one is taken/selected.
   // prev behavior: if you 'use photo' but then upload a new one....you're stacking them on top of each other.
   // This should never be an issue but I wanna leave it here just in case.
@@ -41,6 +47,55 @@ export default function App() {
       URL.revokeObjectURL(preview);
     };
   }, [preview]);
+
+  // auth test
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        const res = await fetch("/api/session", {
+          credentials: "include",
+        });
+
+        const data = await res.json();
+        setIsUnlocked(!!data.ok);
+      } catch {
+        setIsUnlocked(false);
+      }
+    }
+
+    checkSession();
+  }, []);
+
+  async function handleUnlock(e: React.FormEvent) {
+    e.preventDefault();
+    setPinError("");
+    setIsUnlocking(true);
+
+    try {
+      const res = await fetch("/api/unlock", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ pin: pin.trim() }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.ok) {
+        setPinError("Wrong PIN");
+        return;
+      }
+
+      setIsUnlocked(true);
+      setPin("");
+    } catch {
+      setPinError("Could not verify PIN");
+    } finally {
+      setIsUnlocking(false);
+    }
+  }
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null;
@@ -185,116 +240,163 @@ export default function App() {
     form.waterPercent ||
     form.notes;
 
-  return (
-    <div className="page">
-      <div className="card">
-        <h1 className="title">Weight Log</h1>
-        <p className="subtitle">Photo → confirm → save</p>
-
-        <label className="label" htmlFor="file-input">
-          Take or upload photo
-        </label>
-
-        <input
-          id="file-input"
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleFile}
-          className="file-input"
-        />
-
-        {preview && (
-          <div className="preview">
-            <img src={preview} alt="Scale preview" />
-          </div>
-        )}
-
-        <button
-          className="button button-primary"
-          onClick={handleRead}
-          disabled={!file || isReading}
-        >
-          {isReading ? "Reading..." : "Read numbers"}
-        </button>
-
-        {hasData && (
-          <>
-            <div className="confirm-header">
-              <div className="divider" />
-              <button
-                type="button"
-                className="close-button"
-                onClick={clearCurrentEntry}
-                aria-label="Clear current entry"
-                title="Clear current entry"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="grid">
-              <input
-                className="input"
-                placeholder="Weight"
-                value={form.weight}
-                onChange={(e) => update("weight", e.target.value)}
-              />
-              <input
-                className="input"
-                placeholder="Body Fat %"
-                value={form.bodyFat}
-                onChange={(e) => update("bodyFat", e.target.value)}
-              />
-              <input
-                className="input"
-                placeholder="Muscle Mass"
-                value={form.muscleMass}
-                onChange={(e) => update("muscleMass", e.target.value)}
-              />
-              <input
-                className="input"
-                placeholder="Water %"
-                value={form.waterPercent}
-                onChange={(e) => update("waterPercent", e.target.value)}
-              />
-            </div>
-
-            <label className="label">Date</label>
-            <input
-              type="datetime-local"
-              className="input"
-              value={form.loggedAt}
-              onChange={(e) => update("loggedAt", e.target.value)}
-            />
-
-            <label className="label">Notes</label>
-            <textarea
-              className="textarea"
-              rows={3}
-              value={form.notes}
-              onChange={(e) => update("notes", e.target.value)}
-            />
-
-            <button
-              className="button button-success"
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              {isSaving ? "Saving..." : "Confirm & Save"}
-            </button>
-          </>
-        )}
-
-        {error && <p className="error">{error}</p>}
-        {success && <p className="success">{success}</p>}
-
-        {SHOW_DEBUG && debugInfo && (
-          <pre className="debug-box">{JSON.stringify(debugInfo, null, 2)}</pre>
-        )}
+  if (isUnlocked === null) {
+    return (
+      <div className="page">
+        <div className="card">
+          <h1 className="title">Weight Log</h1>
+          <p className="subtitle">Checking access...</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (!isUnlocked) {
+    if (!isUnlocked) {
+      return (
+        <div className="page">
+          <div className="card">
+            <h1 className="title">Weight Log</h1>
+            <p className="subtitle">Enter PIN to continue</p>
+
+            <form onSubmit={handleUnlock}>
+              <input
+                className="input"
+                type="password"
+                inputMode="numeric"
+                placeholder="PIN"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+              />
+
+              <button
+                className="button button-primary"
+                type="submit"
+                disabled={isUnlocking || !pin.trim()}
+              >
+                {isUnlocking ? "Unlocking..." : "Unlock"}
+              </button>
+            </form>
+
+            {pinError && <p className="error">{pinError}</p>}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="page">
+        <div className="card">
+          <h1 className="title">Weight Log</h1>
+          <p className="subtitle">Photo → confirm → save</p>
+
+          <label className="label" htmlFor="file-input">
+            Take or upload photo
+          </label>
+
+          <input
+            id="file-input"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleFile}
+            className="file-input"
+          />
+
+          {preview && (
+            <div className="preview">
+              <img src={preview} alt="Scale preview" />
+            </div>
+          )}
+
+          <button
+            className="button button-primary"
+            onClick={handleRead}
+            disabled={!file || isReading}
+          >
+            {isReading ? "Reading..." : "Read numbers"}
+          </button>
+
+          {hasData && (
+            <>
+              <div className="confirm-header">
+                <div className="divider" />
+                <button
+                  type="button"
+                  className="close-button"
+                  onClick={clearCurrentEntry}
+                  aria-label="Clear current entry"
+                  title="Clear current entry"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="grid">
+                <input
+                  className="input"
+                  placeholder="Weight"
+                  value={form.weight}
+                  onChange={(e) => update("weight", e.target.value)}
+                />
+                <input
+                  className="input"
+                  placeholder="Body Fat %"
+                  value={form.bodyFat}
+                  onChange={(e) => update("bodyFat", e.target.value)}
+                />
+                <input
+                  className="input"
+                  placeholder="Muscle Mass"
+                  value={form.muscleMass}
+                  onChange={(e) => update("muscleMass", e.target.value)}
+                />
+                <input
+                  className="input"
+                  placeholder="Water %"
+                  value={form.waterPercent}
+                  onChange={(e) => update("waterPercent", e.target.value)}
+                />
+              </div>
+
+              <label className="label">Date</label>
+              <input
+                type="datetime-local"
+                className="input"
+                value={form.loggedAt}
+                onChange={(e) => update("loggedAt", e.target.value)}
+              />
+
+              <label className="label">Notes</label>
+              <textarea
+                className="textarea"
+                rows={3}
+                value={form.notes}
+                onChange={(e) => update("notes", e.target.value)}
+              />
+
+              <button
+                className="button button-success"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? "Saving..." : "Confirm & Save"}
+              </button>
+            </>
+          )}
+
+          {error && <p className="error">{error}</p>}
+          {success && <p className="success">{success}</p>}
+
+          {SHOW_DEBUG && debugInfo && (
+            <pre className="debug-box">
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
+          )}
+        </div>
+      </div>
+    );
+  }
 }
 
 function getNow() {
