@@ -8,6 +8,9 @@ Now I can simply
 4. review numbers, modify if needed, normally won't have to
 5. Submit and Sheets API writes data to your google sheet.
 
+TODO ASAP:
+- branch off, convert this to a full stack application, refer to plan doc in cursor, at the moment still trying to define our MVP
+
 TODO:
 
 - Add a pin-code on Vercel DashB before you do 'npx vercel env pull'
