@@ -27,3 +27,11 @@ dist-ssr
 
 .vercel
 .env*.local
+
+# .NET
+backend/bin/
+backend/obj/
+*.user
+*.userosscache
+*.rsuser
+**/Properties/launchSettings.json.user

@@ -29,7 +29,28 @@ TODO:
 - Branch off, do a GCP instead of Apps Script. Then you can turn this into an app people can use.
   - goal: login via email? can log in app or just in your own excel sheet or wherever.
 
-`npx vercel dev` to run local
+`npx vercel dev` to run local (existing personal tool flow)
+
+## Local backend (Step 1 — ASP.NET + Postgres)
+
+Requires Docker Desktop and .NET 10 SDK.
+
+```bash
+# 1) Start Postgres
+docker compose up -d
+
+# 2) Run the API
+cd backend
+dotnet run --launch-profile http
+```
+
+API listens on `http://localhost:5256`.
+Postgres is exposed on host port `5433` (avoids clashing with a local Postgres on `5432`).
+
+- Health: `GET http://localhost:5256/health`
+- DB health: `GET http://localhost:5256/health/db`
+
+Stop Postgres when done: `docker compose down` (data volume is kept).
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
